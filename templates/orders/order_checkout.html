@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+
+{% block title %}Confirm Order | GamesBazaar{% endblock %}
+
+{% block content %}
+<section class="panel">
+    <h1>Confirm Order</h1>
+    <p class="muted">Review quantity, total, and wallet balance before placing your order.</p>
+</section>
+
+<section class="grid grid-two">
+    <article class="panel panel-soft">
+        <h2>Listing</h2>
+        <p><strong>{{ listing.title }}</strong></p>
+        <p class="muted">{{ listing.display_game_name }} | {{ listing.display_category_name }}</p>
+        <p class="muted">Unit price: PKR {{ preview.unit_price }}</p>
+        <p class="muted">Available stock: {{ listing.stock }}</p>
+    </article>
+
+    <aside class="panel">
+        <h2>Payment Summary</h2>
+        <div class="stat-grid" style="grid-template-columns: 1fr;">
+            <div class="stat-tile">
+                <div class="stat-label">Quantity</div>
+                <div class="stat-value">{{ preview.quantity }}</div>
+            </div>
+            <div class="stat-tile">
+                <div class="stat-label">Order Total</div>
+                <div class="stat-value">PKR {{ preview.total_amount }}</div>
+            </div>
+            <div class="stat-tile">
+                <div class="stat-label">Wallet Balance</div>
+                <div class="stat-value">PKR {{ preview.wallet_balance }}</div>
+            </div>
+            <div class="stat-tile">
+                <div class="stat-label">Balance After Order</div>
+                <div class="stat-value">PKR {{ preview.remaining_balance }}</div>
+            </div>
+        </div>
+        {% if not preview.has_sufficient_balance %}
+            <p class="flash flash-error" style="margin-top: 12px;">Insufficient wallet balance for this quantity.</p>
+        {% endif %}
+        <form method="post" class="gb-form" style="margin-top: 12px;">
+            {% csrf_token %}
+            <input type="hidden" name="quantity" value="{{ preview.quantity }}">
+            <div class="actions-row">
+                <button type="submit" class="btn btn-primary" {% if not preview.has_sufficient_balance %}disabled{% endif %}>Place Order</button>
+                <a href="{% url 'listings:detail' listing.id %}" class="btn btn-secondary">Back to Listing</a>
+            </div>
+        </form>
+    </aside>
+</section>
+{% endblock %}

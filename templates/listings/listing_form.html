@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+
+{% block title %}{% if is_edit %}Edit Listing{% else %}Create Listing{% endif %} | GamesBazaar{% endblock %}
+
+{% block content %}
+<section class="panel">
+    <h1>{% if is_edit %}Edit Listing{% else %}Create Listing{% endif %}</h1>
+    <p class="muted">
+        {% if is_edit %}
+            Update your listing details and inventory.
+        {% else %}
+            Select a game and category option from the marketplace catalog, then publish your listing.
+        {% endif %}
+    </p>
+</section>
+
+<section class="panel panel-soft" style="max-width: 840px;">
+    <form method="post" class="gb-form">
+        {% csrf_token %}
+        {{ form.non_field_errors }}
+        {% for field in form %}
+            <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+            {{ field }}
+            {{ field.errors }}
+        {% endfor %}
+        <div class="actions-row" style="margin-top: 12px;">
+            <button type="submit" class="btn btn-primary">{% if is_edit %}Save Changes{% else %}Create Listing{% endif %}</button>
+            <a href="{% url 'listings:mine' %}" class="btn btn-secondary">Cancel</a>
+        </div>
+    </form>
+</section>
+{{ game_category_options|json_script:"game-category-options-data" }}
+<script>
+(() => {
+    const gameSelect = document.getElementById("id_game");
+    const categorySelect = document.getElementById("id_game_category");
+    const dataNode = document.getElementById("game-category-options-data");
+    if (!gameSelect || !categorySelect || !dataNode) {
+        return;
+    }
+
+    const optionsByGame = JSON.parse(dataNode.textContent || "{}");
+    const initialCategoryValue = categorySelect.value;
+
+    const rebuildCategoryOptions = (resetSelection) => {
+        const gameId = gameSelect.value;
+        const options = optionsByGame[gameId] || [];
+        const previousValue = resetSelection ? "" : (categorySelect.value || initialCategoryValue);
+
+        categorySelect.innerHTML = "";
+
+        const placeholder = document.createElement("option");
+        placeholder.value = "";
+        placeholder.textContent = options.length ? "Select category" : "Select game first";
+        categorySelect.appendChild(placeholder);
+
+        options.forEach((option) => {
+            const optionElement = document.createElement("option");
+            optionElement.value = String(option.id);
+            optionElement.textContent = option.label;
+            categorySelect.appendChild(optionElement);
+        });
+
+        if (previousValue && options.some((option) => String(option.id) === String(previousValue))) {
+            categorySelect.value = String(previousValue);
+        }
+    };
+
+    gameSelect.addEventListener("change", () => rebuildCategoryOptions(true));
+    rebuildCategoryOptions(false);
+})();
+</script>
+{% endblock %}

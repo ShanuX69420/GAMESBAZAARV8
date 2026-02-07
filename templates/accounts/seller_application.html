@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+
+{% block title %}Seller Application | GamesBazaar{% endblock %}
+
+{% block content %}
+<section class="panel">
+    <h1>Seller Application</h1>
+    <p class="muted">
+        Submit your profile details for moderation review. Once approved, your account gets seller privileges
+        while retaining buyer access.
+    </p>
+</section>
+
+{% if application and not can_submit %}
+    <section class="panel panel-soft">
+        <h2>Application Under Review</h2>
+        <p>
+            Current status:
+            <span class="status-badge status-{{ application.status }}">{{ application.status|title }}</span>
+        </p>
+        {% if application.admin_note %}
+            <p class="muted">Admin note: {{ application.admin_note }}</p>
+        {% endif %}
+        <p class="muted">You can continue browsing and buying while this is being reviewed.</p>
+    </section>
+{% else %}
+    <section class="panel panel-soft" style="max-width: 760px;">
+        <h2>{% if application and application.status == "rejected" %}Reapply{% else %}Application Form{% endif %}</h2>
+        {% if application and application.status == "rejected" %}
+            <p class="muted">
+                Previous status:
+                <span class="status-badge status-rejected">Rejected</span>
+            </p>
+            {% if application.admin_note %}
+                <p class="muted">Previous admin note: {{ application.admin_note }}</p>
+            {% endif %}
+        {% endif %}
+        <form method="post" class="gb-form">
+            {% csrf_token %}
+            {% for field in form %}
+                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                {{ field }}
+                {{ field.errors }}
+            {% endfor %}
+            <div class="actions-row" style="margin-top: 12px;">
+                <button type="submit" class="btn btn-primary">Submit Application</button>
+                <a href="{% url 'accounts:dashboard' %}" class="btn btn-secondary">Back to Dashboard</a>
+            </div>
+        </form>
+    </section>
+{% endif %}
+{% endblock %}

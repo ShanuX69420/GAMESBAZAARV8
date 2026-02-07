@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+
+{% block title %}{{ listing.title }} | GamesBazaar{% endblock %}
+
+{% block content %}
+<section class="panel panel-soft">
+    <div class="actions-row" style="justify-content: space-between; align-items: center;">
+        <span class="status-badge status-{{ listing.status }}">{{ listing.get_status_display }}</span>
+        {% if is_owner %}
+            <a href="{% url 'listings:mine' %}" class="btn btn-secondary btn-small">Back to My Listings</a>
+        {% else %}
+            <a href="{% url 'listings:list' %}" class="btn btn-secondary btn-small">Back to Marketplace</a>
+        {% endif %}
+    </div>
+</section>
+
+<section class="grid grid-two">
+    <article class="panel">
+        <h1>{{ listing.title }}</h1>
+        <p class="muted">{{ listing.display_game_name }} | {{ listing.display_category_name }}</p>
+        <hr>
+        <h3>Description</h3>
+        <div class="muted">{{ listing.description|linebreaks }}</div>
+    </article>
+
+    <aside class="panel panel-soft">
+        <h2>Listing Details</h2>
+        <div class="stat-grid" style="grid-template-columns: 1fr;">
+            <div class="stat-tile">
+                <div class="stat-label">Price</div>
+                <div class="stat-value">PKR {{ listing.price_pkr }}</div>
+            </div>
+            <div class="stat-tile">
+                <div class="stat-label">Stock</div>
+                <div class="stat-value">{{ listing.stock }}</div>
+            </div>
+            <div class="stat-tile">
+                <div class="stat-label">Seller</div>
+                <div class="stat-value">{{ listing.seller.email }}</div>
+            </div>
+            <div class="stat-tile">
+                <div class="stat-label">Category</div>
+                <div class="stat-value">{{ listing.display_category_name }}</div>
+            </div>
+        </div>
+        <p class="muted" style="margin-top: 14px;">
+            Use listing details to verify pricing, stock, and seller information before placing an order.
+        </p>
+
+        {% if can_buy %}
+            <div class="actions-row" style="margin-top: 14px;">
+                <form method="post" action="{% url 'orders:create' listing.id %}" class="gb-form">
+                    {% csrf_token %}
+                    <label for="id_quantity" style="margin-top: 0;">Quantity</label>
+                    <input id="id_quantity" type="number" name="quantity" min="1" max="{{ listing.stock }}" value="1">
+                    <button type="submit" class="btn btn-primary">Buy Now</button>
+                </form>
+            </div>
+        {% elif is_owner %}
+            <p class="muted" style="margin-top: 14px;">This is your listing.</p>
+            <div class="actions-row" style="margin-top: 10px;">
+                <a href="{% url 'listings:edit' listing.id %}" class="btn btn-secondary">Edit Listing</a>
+                {% if can_pause %}
+                    <form method="post" action="{% url 'listings:pause' listing.id %}" class="inline-form">
+                        {% csrf_token %}
+                        <input type="hidden" name="next" value="{% url 'listings:detail' listing.id %}">
+                        <button type="submit" class="btn btn-secondary">Pause</button>
+                    </form>
+                {% endif %}
+                {% if can_activate %}
+                    <form method="post" action="{% url 'listings:activate' listing.id %}" class="inline-form">
+                        {% csrf_token %}
+                        <input type="hidden" name="next" value="{% url 'listings:detail' listing.id %}">
+                        <button type="submit" class="btn btn-primary">Activate</button>
+                    </form>
+                {% endif %}
+                <form method="post" action="{% url 'listings:delete' listing.id %}" class="inline-form" onsubmit="return confirm('Delete this listing?');">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">Delete</button>
+                </form>
+            </div>
+            {% if can_restock %}
+                <hr>
+                <h3>Restock Listing</h3>
+                <form method="post" action="{% url 'listings:restock' listing.id %}" class="gb-form">
+                    {% csrf_token %}
+                    <label for="id_stock">New stock quantity</label>
+                    <input id="id_stock" type="number" name="stock" min="1" value="{{ restock_form.initial.stock }}">
+                    <div class="actions-row" style="margin-top: 12px;">
+                        <button type="submit" class="btn btn-primary">Restock and Activate</button>
+                    </div>
+                </form>
+            {% endif %}
+        {% elif not request.user.is_authenticated %}
+            <div class="actions-row" style="margin-top: 14px;">
+                <a href="{% url 'accounts:login' %}" class="btn btn-primary">Login to Buy</a>
+            </div>
+        {% endif %}
+    </aside>
+</section>
+{% endblock %}

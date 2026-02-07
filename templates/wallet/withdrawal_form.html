@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+
+{% block title %}Request Withdrawal | GamesBazaar{% endblock %}
+
+{% block head_extra %}
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const methodInput = document.getElementById("id_payout_method");
+    const bankNameGroup = document.getElementById("bank-name-group");
+    const bankNameInput = document.getElementById("id_bank_name");
+    const accountNumberLabel = document.getElementById("account-number-label");
+
+    function updateFields() {
+        if (!methodInput) {
+            return;
+        }
+        const isBankTransfer = methodInput.value === "bank_transfer";
+        if (bankNameGroup) {
+            bankNameGroup.style.display = isBankTransfer ? "block" : "none";
+        }
+        if (bankNameInput) {
+            bankNameInput.required = isBankTransfer;
+        }
+        if (accountNumberLabel) {
+            accountNumberLabel.textContent = isBankTransfer
+                ? "Account number / IBAN"
+                : "Wallet account number";
+        }
+    }
+
+    if (methodInput) {
+        methodInput.addEventListener("change", updateFields);
+        updateFields();
+    }
+});
+</script>
+{% endblock %}
+
+{% block content %}
+<section class="panel">
+    <h1>Request Withdrawal</h1>
+    <p class="muted">
+        Withdrawal amount is moved from available balance to held balance until admin processes payout.
+    </p>
+</section>
+
+<section class="panel panel-soft" style="max-width: 760px;">
+    <form method="post" class="gb-form">
+        {% csrf_token %}
+        {{ form.non_field_errors }}
+
+        <label for="{{ form.amount.id_for_label }}">{{ form.amount.label }}</label>
+        {{ form.amount }}
+        {{ form.amount.errors }}
+
+        <label for="{{ form.payout_method.id_for_label }}">{{ form.payout_method.label }}</label>
+        {{ form.payout_method }}
+        {{ form.payout_method.errors }}
+
+        <label for="{{ form.account_title.id_for_label }}">{{ form.account_title.label }}</label>
+        {{ form.account_title }}
+        {{ form.account_title.errors }}
+
+        <label id="account-number-label" for="{{ form.account_number.id_for_label }}">{{ form.account_number.label }}</label>
+        {{ form.account_number }}
+        {{ form.account_number.errors }}
+
+        <div id="bank-name-group">
+            <label for="{{ form.bank_name.id_for_label }}">{{ form.bank_name.label }}</label>
+            {{ form.bank_name }}
+            {{ form.bank_name.errors }}
+        </div>
+
+        <div class="actions-row" style="margin-top: 12px;">
+            <button type="submit" class="btn btn-primary">Submit Withdrawal Request</button>
+            <a href="{% url 'wallet:dashboard' %}" class="btn btn-secondary">Back to Wallet</a>
+        </div>
+    </form>
+</section>
+{% endblock %}

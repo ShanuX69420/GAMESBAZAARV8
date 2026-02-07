@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block title %}Register | GamesBazaar{% endblock %}
+
+{% block content %}
+<section class="panel panel-soft" style="max-width: 620px; margin: 0 auto;">
+    <h1>Create Your GamesBazaar Account</h1>
+    <p class="muted">Start as a buyer and apply for seller access when ready.</p>
+    <form method="post" class="gb-form">
+        {% csrf_token %}
+        {{ form.non_field_errors }}
+        {% for field in form %}
+            <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+            {{ field }}
+            {{ field.errors }}
+        {% endfor %}
+        <div class="actions-row" style="margin-top: 12px;">
+            <button type="submit" class="btn btn-primary">Register</button>
+            <a href="{% url 'accounts:login' %}" class="btn btn-secondary">Already have an account?</a>
+        </div>
+    </form>
+</section>
+{% endblock %}

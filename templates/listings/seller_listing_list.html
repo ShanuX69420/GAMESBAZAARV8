@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block title %}My Listings | GamesBazaar{% endblock %}
+
+{% block content %}
+<section class="panel">
+    <div class="actions-row" style="justify-content: space-between; align-items: center;">
+        <div>
+            <h1 style="margin-bottom: 8px;">My Listings</h1>
+            <p class="muted" style="margin: 0;">Manage published listing inventory and pricing.</p>
+        </div>
+        <a href="{% url 'listings:create' %}" class="btn btn-primary">Create New Listing</a>
+    </div>
+</section>
+
+<section class="panel panel-soft">
+    {% if listings %}
+        <div class="grid grid-three">
+            {% for listing in listings %}
+                <article class="card-listing">
+                    <span class="status-badge status-{{ listing.status }}">{{ listing.get_status_display }}</span>
+                    <h3 style="margin: 10px 0 8px;"><a href="{% url 'listings:detail' listing.pk %}" style="text-decoration: none; color: inherit;">{{ listing.title }}</a></h3>
+                    <p class="muted" style="margin: 0 0 8px;">{{ listing.display_game_name }} | {{ listing.display_category_name }}</p>
+                    <p style="margin: 0 0 8px;"><strong>PKR {{ listing.price_pkr }}</strong> | Stock: {{ listing.stock }}</p>
+                    <div class="actions-row">
+                        <a href="{% url 'listings:detail' listing.pk %}" class="btn btn-secondary btn-small">View</a>
+                        <a href="{% url 'listings:edit' listing.pk %}" class="btn btn-secondary btn-small">Edit</a>
+                        {% if listing.status == "active" %}
+                            <form method="post" action="{% url 'listings:pause' listing.pk %}" class="inline-form">
+                                {% csrf_token %}
+                                <input type="hidden" name="next" value="{% url 'listings:mine' %}">
+                                <button type="submit" class="btn btn-secondary btn-small">Pause</button>
+                            </form>
+                        {% elif listing.status == "paused" or listing.status == "sold_out" or listing.status == "archived" %}
+                            {% if listing.stock > 0 %}
+                                <form method="post" action="{% url 'listings:activate' listing.pk %}" class="inline-form">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="next" value="{% url 'listings:mine' %}">
+                                    <button type="submit" class="btn btn-primary btn-small">Activate</button>
+                                </form>
+                            {% endif %}
+                        {% endif %}
+                        <form method="post" action="{% url 'listings:delete' listing.pk %}" class="inline-form" onsubmit="return confirm('Delete this listing?');">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-danger btn-small">Delete</button>
+                        </form>
+                    </div>
+                </article>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p class="muted">You have no listings yet.</p>
+        <div class="actions-row">
+            <a href="{% url 'listings:create' %}" class="btn btn-primary">Create Your First Listing</a>
+        </div>
+    {% endif %}
+</section>
+{% endblock %}

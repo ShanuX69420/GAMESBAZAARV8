@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+
+{% block title %}Create Deposit Ticket | GamesBazaar{% endblock %}
+
+{% block content %}
+<section class="panel">
+    <h1>Create Deposit Ticket</h1>
+    <p class="muted">
+        Submit your payment details so admin can verify and credit your wallet.
+    </p>
+</section>
+
+<section class="panel panel-soft">
+    <h2>Payment Details</h2>
+    <div class="table-wrap">
+        <table class="gb-table">
+            <thead>
+                <tr>
+                    <th>Method</th>
+                    <th>Account Name</th>
+                    <th>Account Number / IBAN</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in payment_details %}
+                    <tr>
+                        <td>{{ item.title }}</td>
+                        <td>{{ item.account_name }}</td>
+                        <td>{{ item.account_id }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<section class="panel panel-soft" style="max-width: 760px;">
+    <form method="post" class="gb-form" enctype="multipart/form-data">
+        {% csrf_token %}
+        {{ form.non_field_errors }}
+        {% for field in form %}
+            <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+            {{ field }}
+            {{ field.errors }}
+        {% endfor %}
+        <div class="actions-row" style="margin-top: 12px;">
+            <button type="submit" class="btn btn-primary">Submit Deposit Ticket</button>
+            <a href="{% url 'wallet:dashboard' %}" class="btn btn-secondary">Back to Wallet</a>
+        </div>
+    </form>
+</section>
+{% endblock %}

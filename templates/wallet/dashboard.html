@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+
+{% block title %}Wallet | GamesBazaar{% endblock %}
+
+{% block content %}
+<section class="panel">
+    <div class="actions-row" style="justify-content: space-between; align-items: center;">
+        <div>
+            <h1 style="margin-bottom: 8px;">Wallet Dashboard</h1>
+            {% if request.user.role == "seller" %}
+                <p class="muted" style="margin: 0;">Track balances, deposits, and withdrawals.</p>
+            {% else %}
+                <p class="muted" style="margin: 0;">Track balances and deposit tickets.</p>
+            {% endif %}
+        </div>
+        <div class="actions-row">
+            <a href="{% url 'wallet:deposit_create' %}" class="btn btn-primary">Create Deposit Ticket</a>
+            {% if request.user.role == "seller" %}
+                <a href="{% url 'wallet:withdrawal_create' %}" class="btn btn-secondary">Request Withdrawal</a>
+            {% endif %}
+        </div>
+    </div>
+</section>
+
+<section class="panel panel-soft">
+    <h2>Balance Summary</h2>
+    <div class="stat-grid" style="grid-template-columns: repeat(2, minmax(0, 1fr));">
+        <div class="stat-tile">
+            <div class="stat-label">Available Balance</div>
+            <div class="stat-value">PKR {{ wallet.available_balance }}</div>
+        </div>
+        <div class="stat-tile">
+            <div class="stat-label">Held Balance</div>
+            <div class="stat-value">PKR {{ wallet.held_balance }}</div>
+        </div>
+    </div>
+</section>
+
+<section class="panel">
+    <h2>Recent Ledger Activity</h2>
+    {% if entries %}
+        <div class="table-wrap">
+            <table class="gb-table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Type</th>
+                        <th>Amount</th>
+                        <th>Direction</th>
+                        <th>Note</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for entry in entries %}
+                        <tr>
+                            <td>{{ entry.created_at|date:"Y-m-d H:i" }}</td>
+                            <td>{{ entry.get_entry_type_display }}</td>
+                            <td>PKR {{ entry.amount }}</td>
+                            <td>{{ entry.get_direction_display }}</td>
+                            <td>{{ entry.note|default:"-" }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <p class="muted">No wallet ledger entries yet.</p>
+    {% endif %}
+</section>
+
+<section class="grid grid-two">
+    <article class="panel panel-soft">
+        <h2>Deposit Tickets</h2>
+        {% if deposit_tickets %}
+            <div class="table-wrap">
+                <table class="gb-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Amount</th>
+                            <th>Method</th>
+                            <th>TRX ID</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for ticket in deposit_tickets %}
+                            <tr>
+                                <td>#{{ ticket.id }}</td>
+                                <td>PKR {{ ticket.amount }}</td>
+                                <td>{{ ticket.get_payment_method_display }}</td>
+                                <td>{{ ticket.transaction_id|default:"-" }}</td>
+                                <td>
+                                    <span class="status-badge status-{{ ticket.status }}">{{ ticket.status|title }}</span>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <p class="muted">No deposit tickets submitted yet.</p>
+        {% endif %}
+    </article>
+
+    {% if request.user.role == "seller" %}
+        <article class="panel panel-soft">
+            <h2>Withdrawal Requests</h2>
+            {% if withdrawal_requests %}
+                <div class="table-wrap">
+                    <table class="gb-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Amount</th>
+                                <th>Status</th>
+                                <th>Payout Method</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for request_obj in withdrawal_requests %}
+                                <tr>
+                                    <td>#{{ request_obj.id }}</td>
+                                    <td>PKR {{ request_obj.amount }}</td>
+                                    <td>
+                                        <span class="status-badge status-{{ request_obj.status }}">{{ request_obj.status|title }}</span>
+                                    </td>
+                                    <td>{{ request_obj.get_payout_method_display }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <p class="muted">No withdrawal requests yet.</p>
+            {% endif %}
+        </article>
+    {% endif %}
+</section>
+{% endblock %}

@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard | GamesBazaar{% endblock %}
+
+{% block content %}
+<section class="panel">
+    <h1>Account Dashboard</h1>
+    <p class="muted">Signed in as {{ request.user.email }}</p>
+</section>
+
+<section class="panel panel-soft">
+    <h2>Seller Status</h2>
+    {% if request.user.role == "seller" %}
+        <p><span class="status-badge status-approved">Seller Approved</span></p>
+        <p class="muted">You can create listings and continue buying like a normal user.</p>
+        <div class="actions-row">
+            <a href="{% url 'listings:create' %}" class="btn btn-primary">Create Listing</a>
+            <a href="{% url 'listings:mine' %}" class="btn btn-secondary">View My Listings</a>
+            <a href="{% url 'listings:list' %}" class="btn btn-secondary">Browse as Buyer</a>
+        </div>
+    {% else %}
+        {% if application %}
+            <p><span class="status-badge status-{{ application.status }}">{{ application.status|title }}</span></p>
+            {% if application.admin_note %}
+                <p class="muted">Admin note: {{ application.admin_note }}</p>
+            {% endif %}
+            {% if application.status == "rejected" %}
+                <div class="actions-row">
+                    <a href="{% url 'accounts:seller_application' %}" class="btn btn-primary">Reapply as Seller</a>
+                </div>
+            {% endif %}
+        {% else %}
+            <div class="actions-row">
+                <a href="{% url 'accounts:seller_application' %}" class="btn btn-primary">Apply to Become Seller</a>
+            </div>
+        {% endif %}
+    {% endif %}
+</section>
+{% endblock %}

@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+
+{% block title %}Orders | GamesBazaar{% endblock %}
+
+{% block content %}
+<section class="panel">
+    <h1>Orders</h1>
+    <p class="muted">Track purchases, deliveries, confirmations, and disputes.</p>
+</section>
+
+<section class="panel panel-soft">
+    {% if orders %}
+        <div class="table-wrap">
+            <table class="gb-table">
+                <thead>
+                    <tr>
+                        <th>Order</th>
+                        <th>Role</th>
+                        <th>Listing</th>
+                        <th>Amount</th>
+                        <th>Status</th>
+                        <th>Updated</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for order in orders %}
+                        <tr>
+                            <td><a href="{% url 'orders:detail' order.id %}">#{{ order.id }}</a></td>
+                            <td>
+                                {% if request.user.id == order.buyer_id %}
+                                    Buyer
+                                {% else %}
+                                    Seller
+                                {% endif %}
+                            </td>
+                            <td>{{ order.listing.title }}</td>
+                            <td>PKR {{ order.total_amount }}</td>
+                            <td><span class="status-badge status-{{ order.status }}">{{ order.get_status_display }}</span></td>
+                            <td>{{ order.updated_at|date:"Y-m-d H:i" }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <p class="muted">No orders yet.</p>
+    {% endif %}
+</section>
+{% endblock %}

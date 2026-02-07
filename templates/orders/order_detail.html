@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+
+{% block title %}Order #{{ order.id }} | GamesBazaar{% endblock %}
+
+{% block content %}
+<section class="panel">
+    <div class="actions-row" style="justify-content: space-between; align-items: center;">
+        <h1 style="margin: 0;">Order #{{ order.id }}</h1>
+        <span class="status-badge status-{{ order.status }}">{{ order.get_status_display }}</span>
+    </div>
+    <p class="muted" style="margin-top: 8px;">
+        Listing: <a href="{% url 'listings:detail' order.listing.id %}">{{ order.listing.title }}</a>
+    </p>
+</section>
+
+<section class="grid grid-two">
+    <article class="panel panel-soft">
+        <h2>Order Summary</h2>
+        <div class="stat-grid" style="grid-template-columns: 1fr;">
+            <div class="stat-tile">
+                <div class="stat-label">Buyer</div>
+                <div class="stat-value">{{ order.buyer.email }}</div>
+            </div>
+            <div class="stat-tile">
+                <div class="stat-label">Seller</div>
+                <div class="stat-value">{{ order.seller.email }}</div>
+            </div>
+            <div class="stat-tile">
+                <div class="stat-label">Amount</div>
+                <div class="stat-value">PKR {{ order.total_amount }}</div>
+            </div>
+            <div class="stat-tile">
+                <div class="stat-label">Quantity</div>
+                <div class="stat-value">{{ order.quantity }}</div>
+            </div>
+        </div>
+    </article>
+
+    <aside class="panel">
+        <h2>Timeline</h2>
+        <p class="muted">Created: {{ order.created_at|date:"Y-m-d H:i" }}</p>
+        {% if order.delivered_at %}
+            <p class="muted">Delivered: {{ order.delivered_at|date:"Y-m-d H:i" }}</p>
+        {% endif %}
+        {% if order.auto_release_at %}
+            <p class="muted">Auto release: {{ order.auto_release_at|date:"Y-m-d H:i" }}</p>
+        {% endif %}
+        {% if order.completed_at %}
+            <p class="muted">Completed: {{ order.completed_at|date:"Y-m-d H:i" }}</p>
+        {% endif %}
+        {% if order.delivery_note %}
+            <hr>
+            <h3>Delivery Note</h3>
+            <p class="muted">{{ order.delivery_note|linebreaks }}</p>
+        {% endif %}
+    </aside>
+</section>
+
+{% if request.user.id == order.seller_id and order.status == "pending_delivery" %}
+    <section class="panel">
+        <h2>Seller Action</h2>
+        <form method="post" action="{% url 'orders:mark_delivered' order.id %}" class="gb-form">
+            {% csrf_token %}
+            <label for="id_delivery_note">Delivery note (optional)</label>
+            <textarea id="id_delivery_note" name="delivery_note" rows="4"></textarea>
+            <div class="actions-row" style="margin-top: 12px;">
+                <button type="submit" class="btn btn-primary">Mark as Delivered</button>
+            </div>
+        </form>
+    </section>
+{% endif %}
+
+{% if request.user.id == order.buyer_id and order.status == "delivered" %}
+    <section class="grid grid-two">
+        <article class="panel panel-soft">
+            <h2>Buyer Confirmation</h2>
+            <p class="muted">Confirm delivery to release funds instantly to the seller.</p>
+            <form method="post" action="{% url 'orders:confirm' order.id %}" class="inline-form">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-primary">Confirm Delivery</button>
+            </form>
+        </article>
+
+        <article class="panel">
+            <h2>Open Dispute</h2>
+            <form method="post" action="{% url 'orders:open_dispute' order.id %}" class="gb-form">
+                {% csrf_token %}
+                <label for="id_reason">Reason</label>
+                <input type="text" id="id_reason" name="reason" maxlength="120" required>
+                <label for="id_details">Details</label>
+                <textarea id="id_details" name="details" rows="4"></textarea>
+                <div class="actions-row" style="margin-top: 12px;">
+                    <button type="submit" class="btn btn-danger">Open Dispute</button>
+                </div>
+            </form>
+        </article>
+    </section>
+{% endif %}
+
+{% if order.dispute %}
+    <section class="panel panel-soft">
+        <h2>Dispute</h2>
+        <p><span class="status-badge status-{{ order.dispute.status }}">{{ order.dispute.get_status_display }}</span></p>
+        <p class="muted"><strong>Reason:</strong> {{ order.dispute.reason }}</p>
+        {% if order.dispute.details %}
+            <p class="muted">{{ order.dispute.details|linebreaks }}</p>
+        {% endif %}
+        {% if order.dispute.resolution_note %}
+            <p class="muted"><strong>Resolution:</strong> {{ order.dispute.resolution_note }}</p>
+        {% endif %}
+    </section>
+{% endif %}
+{% endblock %}

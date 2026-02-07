@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block title %}Login | GamesBazaar{% endblock %}
+
+{% block content %}
+<section class="panel panel-soft" style="max-width: 540px; margin: 0 auto;">
+    <h1>Welcome Back</h1>
+    <p class="muted">Login to manage listings, wallet operations, and trades.</p>
+    <form method="post" class="gb-form">
+        {% csrf_token %}
+        {{ form.non_field_errors }}
+        {% for field in form %}
+            <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+            {{ field }}
+            {{ field.errors }}
+        {% endfor %}
+        <div class="actions-row" style="margin-top: 12px;">
+            <button type="submit" class="btn btn-primary">Login</button>
+            <a href="{% url 'accounts:register' %}" class="btn btn-secondary">Create Account</a>
+        </div>
+    </form>
+</section>
+{% endblock %}

@@ -1,0 +1,14 @@
+{% extends "admin/change_form.html" %}
+
+{% block submit_buttons_bottom %}
+    {{ block.super }}
+    {% if original and original.status != "paid" and original.status != "rejected" %}
+        <div class="submit-row">
+            {% if original.status == "pending" %}
+                <input type="submit" name="_approve_request" value="Approve Request" style="background:#198754;color:#fff;">
+            {% endif %}
+            <input type="submit" name="_pay_request" value="Mark as Paid" style="background:#0b6da8;color:#fff;">
+            <input type="submit" name="_reject_request" value="Reject Request" style="background:#b1424f;color:#fff;">
+        </div>
+    {% endif %}
+{% endblock %}

@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+
+{% block title %}Marketplace | GamesBazaar{% endblock %}
+
+{% block content %}
+<section class="panel hero">
+    <p class="kicker">Marketplace</p>
+    <h1>Find Accounts, Items, and Top-Ups</h1>
+    <p class="muted" style="max-width: 640px; color: rgba(241, 248, 255, 0.9);">
+        Browse active listings from verified sellers. Use filters to narrow by category and price range.
+    </p>
+</section>
+
+<section class="panel panel-soft">
+    <h2>Filters</h2>
+    <form method="get" class="gb-form">
+        <div class="grid grid-three">
+            <div>
+                <label for="id_q">Search</label>
+                <input id="id_q" type="text" name="q" value="{{ current_query }}" placeholder="Game title or listing title">
+            </div>
+            <div>
+                <label for="id_category">Category</label>
+                <select id="id_category" name="category">
+                    <option value="">All categories</option>
+                    {% for value, label in category_choices %}
+                        <option value="{{ value }}" {% if current_category == value %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label for="id_sort">Sort</label>
+                <select id="id_sort" name="sort">
+                    <option value="newest" {% if current_sort == "newest" %}selected{% endif %}>Newest</option>
+                    <option value="price_low" {% if current_sort == "price_low" %}selected{% endif %}>Price low to high</option>
+                    <option value="price_high" {% if current_sort == "price_high" %}selected{% endif %}>Price high to low</option>
+                </select>
+            </div>
+        </div>
+        <div class="grid grid-two">
+            <div>
+                <label for="id_min_price">Min Price (PKR)</label>
+                <input id="id_min_price" type="number" min="0" step="0.01" name="min_price" value="{{ current_min_price }}">
+            </div>
+            <div>
+                <label for="id_max_price">Max Price (PKR)</label>
+                <input id="id_max_price" type="number" min="0" step="0.01" name="max_price" value="{{ current_max_price }}">
+            </div>
+        </div>
+        <div class="actions-row" style="margin-top: 12px;">
+            <button type="submit" class="btn btn-primary">Apply Filters</button>
+            <a href="{% url 'listings:list' %}" class="btn btn-secondary">Reset</a>
+        </div>
+    </form>
+</section>
+
+<section class="panel">
+    <h2>Active Listings</h2>
+    {% if listings %}
+        <div class="grid grid-three">
+            {% for listing in listings %}
+                <a class="card-listing" href="{% url 'listings:detail' listing.pk %}">
+                    <span class="status-badge status-active">Active</span>
+                    <h3 style="margin: 10px 0 8px;">{{ listing.title }}</h3>
+                    <p class="muted" style="margin: 0 0 8px;">{{ listing.display_game_name }} | {{ listing.display_category_name }}</p>
+                    <p style="margin: 0 0 8px;"><strong>PKR {{ listing.price_pkr }}</strong></p>
+                    <p class="muted" style="margin: 0;">Stock: {{ listing.stock }} | Seller: {{ listing.seller.email }}</p>
+                </a>
+            {% endfor %}
+        </div>
+
+        {% if is_paginated %}
+            <hr>
+            <div class="actions-row">
+                {% if page_obj.has_previous %}
+                    <a class="btn btn-secondary" href="?page={{ page_obj.previous_page_number }}&q={{ current_query }}&category={{ current_category }}&min_price={{ current_min_price }}&max_price={{ current_max_price }}&sort={{ current_sort }}">Previous</a>
+                {% endif %}
+                {% if page_obj.has_next %}
+                    <a class="btn btn-secondary" href="?page={{ page_obj.next_page_number }}&q={{ current_query }}&category={{ current_category }}&min_price={{ current_min_price }}&max_price={{ current_max_price }}&sort={{ current_sort }}">Next</a>
+                {% endif %}
+            </div>
+        {% endif %}
+    {% else %}
+        <p class="muted">No listings found for the current filters.</p>
+    {% endif %}
+</section>
+{% endblock %}

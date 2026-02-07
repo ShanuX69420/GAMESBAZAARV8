@@ -1,0 +1,11 @@
+{% extends "admin/change_form.html" %}
+
+{% block submit_buttons_bottom %}
+    {{ block.super }}
+    {% if original and original.status == "open" %}
+        <div class="submit-row">
+            <input type="submit" name="_resolve_seller_win" value="Resolve: Seller Win" style="background:#198754;color:#fff;">
+            <input type="submit" name="_resolve_buyer_refund" value="Resolve: Buyer Refund" style="background:#0b6da8;color:#fff;">
+        </div>
+    {% endif %}
+{% endblock %}
