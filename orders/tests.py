@@ -242,3 +242,18 @@ class OrderLifecycleTests(TestCase):
         dispute.refresh_from_db()
         self.assertEqual(order.status, OrderStatus.REFUNDED)
         self.assertEqual(dispute.status, DisputeStatus.RESOLVED)
+
+    def test_non_participant_cannot_access_order_mutation_endpoints(self):
+        order = create_order_from_listing(buyer=self.buyer, listing_id=self.listing.id)
+        self.client.force_login(self.other_buyer)
+
+        mark_response = self.client.post(reverse("orders:mark_delivered", kwargs={"order_id": order.id}))
+        confirm_response = self.client.post(reverse("orders:confirm", kwargs={"order_id": order.id}))
+        dispute_response = self.client.post(
+            reverse("orders:open_dispute", kwargs={"order_id": order.id}),
+            {"reason": "Wrong item", "details": "Unauthorized attempt"},
+        )
+
+        self.assertEqual(mark_response.status_code, 404)
+        self.assertEqual(confirm_response.status_code, 404)
+        self.assertEqual(dispute_response.status_code, 404)

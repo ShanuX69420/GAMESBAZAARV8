@@ -327,6 +327,30 @@ class ListingViewsTests(TestCase):
         listing.refresh_from_db()
         self.assertEqual(listing.status, ListingStatus.ACTIVE)
 
+    def test_listing_status_action_rejects_external_next_redirect(self):
+        listing = Listing.objects.create(
+            seller=self.seller,
+            game=self.valorant_game,
+            game_category=self.valorant_account_category,
+            category=ListingCategory.ACCOUNT,
+            game_title="Valorant",
+            title="Safe Redirect Listing",
+            description="Redirect hardening.",
+            price_pkr="2200.00",
+            stock=2,
+            status=ListingStatus.ACTIVE,
+        )
+        self.client.force_login(self.seller)
+
+        response = self.client.post(
+            reverse("listings:pause", kwargs={"listing_id": listing.pk}),
+            {"next": "https://evil.example.com/phish"},
+        )
+
+        self.assertRedirects(response, reverse("listings:detail", kwargs={"pk": listing.pk}))
+        listing.refresh_from_db()
+        self.assertEqual(listing.status, ListingStatus.PAUSED)
+
     def test_seller_can_delete_listing_without_orders(self):
         listing = Listing.objects.create(
             seller=self.seller,

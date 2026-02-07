@@ -53,6 +53,16 @@ class OrderDetailView(LoginRequiredMixin, DetailView):
         return context
 
 
+class OrderParticipantAccessMixin(LoginRequiredMixin):
+    def get_order_for_user(self, order_id):
+        return get_object_or_404(
+            Order.objects.select_related("buyer", "seller", "listing").filter(
+                Q(buyer=self.request.user) | Q(seller=self.request.user)
+            ),
+            pk=order_id,
+        )
+
+
 class OrderCreateView(LoginRequiredMixin, View):
     def post(self, request, listing_id):
         quantity = request.POST.get("quantity", "1")
@@ -136,9 +146,9 @@ class OrderCheckoutView(LoginRequiredMixin, View):
         return redirect("orders:detail", pk=order.pk)
 
 
-class MarkOrderDeliveredView(LoginRequiredMixin, View):
+class MarkOrderDeliveredView(OrderParticipantAccessMixin, View):
     def post(self, request, order_id):
-        order = get_object_or_404(Order, pk=order_id)
+        order = self.get_order_for_user(order_id)
         form = DeliveryNoteForm(request.POST)
         note = ""
         if form.is_valid():
@@ -154,9 +164,9 @@ class MarkOrderDeliveredView(LoginRequiredMixin, View):
         return redirect("orders:detail", pk=order.pk)
 
 
-class ConfirmOrderDeliveryView(LoginRequiredMixin, View):
+class ConfirmOrderDeliveryView(OrderParticipantAccessMixin, View):
     def post(self, request, order_id):
-        order = get_object_or_404(Order, pk=order_id)
+        order = self.get_order_for_user(order_id)
         try:
             confirm_order_delivery(order=order, actor=request.user)
         except (OrderError, WalletError) as exc:
@@ -166,9 +176,9 @@ class ConfirmOrderDeliveryView(LoginRequiredMixin, View):
         return redirect("orders:detail", pk=order.pk)
 
 
-class OpenDisputeView(LoginRequiredMixin, View):
+class OpenDisputeView(OrderParticipantAccessMixin, View):
     def post(self, request, order_id):
-        order = get_object_or_404(Order, pk=order_id)
+        order = self.get_order_for_user(order_id)
         form = DisputeForm(request.POST)
         if not form.is_valid():
             messages.error(request, "Please provide a valid dispute reason.")

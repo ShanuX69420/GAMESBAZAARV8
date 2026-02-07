@@ -5,6 +5,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models import Q
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse
+from django.utils.http import url_has_allowed_host_and_scheme
 from django.views import View
 from django.views.generic import CreateView, DetailView, ListView, UpdateView
 
@@ -212,9 +213,20 @@ class ListingRestockView(SellerRequiredMixin, View):
 
 
 class ListingStatusUpdateView(SellerRequiredMixin, View):
+    def _get_safe_next_url(self, request, listing_id):
+        fallback = reverse("listings:detail", kwargs={"pk": listing_id})
+        next_url = request.POST.get("next", "").strip()
+        if next_url and url_has_allowed_host_and_scheme(
+            url=next_url,
+            allowed_hosts={request.get_host()},
+            require_https=request.is_secure(),
+        ):
+            return next_url
+        return fallback
+
     def post(self, request, listing_id, action):
         listing = get_object_or_404(Listing, pk=listing_id, seller=request.user)
-        next_url = request.POST.get("next") or reverse("listings:detail", kwargs={"pk": listing.pk})
+        next_url = self._get_safe_next_url(request, listing.pk)
 
         if action == "pause":
             if listing.status == ListingStatus.ACTIVE:
